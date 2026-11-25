@@ -1,0 +1,25 @@
+name: Upload macOS DMG to release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download DMG from CloudBase backup
+        run: |
+          curl -fL --retry 3 --retry-delay 5 \
+            -o FRAMEWORK-1.4.0-arm64.dmg \
+            https://framework-site-v3-334892-11-1516363360.sh.run.tcloudbase.com/releases/FRAMEWORK-1.4.0-arm64.dmg
+      - name: Verify size and SHA-256
+        run: |
+          test "$(stat -c %s FRAMEWORK-1.4.0-arm64.dmg)" = "326131613"
+          echo "46d5f237d180fa5769c60ecfbfb6e4672d8a3562ad3b25246699fe87a7a354ab  FRAMEWORK-1.4.0-arm64.dmg" | sha256sum -c -
+      - name: Upload to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload v1.4.0 FRAMEWORK-1.4.0-arm64.dmg --clobber
